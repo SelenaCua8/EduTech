@@ -1,0 +1,13 @@
+package repository;
+
+import java.util.List;
+import BLL.Usuario;
+
+public interface UsuarioRepository {
+    void agregarUsuario(Usuario usuario);
+    List<Usuario> mostrarUsuarios();
+	<T> T login(String nombre, String password);
+	
+	void editar(Usuario usuario); 
+    void eliminar(Usuario usuario);
+}
