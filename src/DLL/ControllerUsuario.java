@@ -62,13 +62,12 @@ public class ControllerUsuario implements UsuarioRepository {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                // En lugar de new Usuario, usamos una clase que SI se pueda instanciar
-                // Asegúrate de que Alumno tenga este constructor en BLL.Alumno
+                
                 lista.add(new Alumno(
                     rs.getInt("id_usuario"),
                     rs.getString("nombre"),
                     rs.getString("apellido"),
-                    rs.getString("email"), // Ojo: verifica el orden en tu constructor de Alumno
+                    rs.getString("email"), 
                     rs.getString("contrasenia")
                 ));
             }
