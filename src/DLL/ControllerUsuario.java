@@ -1,29 +1,33 @@
 package DLL;
 
 import java.sql.Connection;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import javax.swing.JOptionPane;
 
+import BLL.Administrador;
 import BLL.Alumno;
+import BLL.Contenidista;
+import BLL.Profesor;
 import BLL.Usuario;
 import repository.UsuarioRepository; // Asegurate de tener esta interfaz
 
 public class ControllerUsuario implements UsuarioRepository {
     
-    // 1. Definimos 'con' a nivel de clase para que TODOS los métodos la vean
+ 
     private Connection con = Conexion.getInstance().getConnection();
 
-    // Método simple para pruebas
-    public void registrarUsuario(String nombre, String apellido, String contra, String email) {
+    // No me acuerdo para que estaba hecho este, lo dejo por las dudas vemos mas adelante, creo que era para que el admin agregue usuarios 
+    /*public void registrarUsuario(String nombre, String apellido, String password, String email) {
         String sql = "INSERT INTO usuarios (nombre, apellido, contrasenia, email) VALUES (?, ?, ?, ?)";
         try {
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, nombre);
             ps.setString(2, apellido);
-            ps.setString(3, contra);
+            ps.setString(3, password);
             ps.setString(4, email);
             
             ps.executeUpdate();
@@ -32,10 +36,51 @@ public class ControllerUsuario implements UsuarioRepository {
             System.out.println("Error al guardar: " + e.getMessage());
         }
     }
-
+ */
+    public boolean insertarUsuarioNuevo(String nombre, String apellido, String password, String email, String rol) {
+        // IMPORTANTE: Ponemos 'PENDIENTE' directamente en el SQL
+        String sql = "INSERT INTO usuarios (nombre, apellido, password, email, rol, estado) VALUES (?, ?, ?, ?, ?, 'PENDIENTE')";
+        
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, nombre);
+            ps.setString(2, apellido);
+            ps.setString(3, password); 
+            ps.setString(4, email);
+            ps.setString(5, rol); // El rol que eligió en el menú (ALUMNO, PROFESOR, etc.)
+            
+            int resultado = ps.executeUpdate();
+            if (resultado > 0) {
+                System.out.println("✅ Solicitud de registro guardada. Estado: PENDIENTE.");
+                return true;
+            }
+        } catch (SQLException e) {
+            System.out.println("❌ Error al registrar en la DLL: " + e.getMessage());
+            // Si el email ya existe, saltará por aquí por el campo UNIQUE de la DB
+        }
+        return false;
+    }
+    
+    //controlar que no exista el usuario a traves del mail
+    public boolean existeEmail(String email) {
+        String sql = "SELECT COUNT(*) FROM usuarios WHERE email = ?";
+        try {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0; // Si el conteo es mayor a 0, ya existe
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    //lo mismo
     @Override
     public void agregarUsuario(Usuario usuario) {
-        String sql = "INSERT INTO usuarios (nombre, apellido, contrasenia, email) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO usuarios (nombre, apellido, password, email) VALUES (?, ?, ?, ?)";
         try {
             PreparedStatement statement = con.prepareStatement(sql);
             statement.setString(1, usuario.getNombre());
@@ -68,7 +113,7 @@ public class ControllerUsuario implements UsuarioRepository {
                     rs.getString("nombre"),
                     rs.getString("apellido"),
                     rs.getString("email"), 
-                    rs.getString("contrasenia")
+                    rs.getString("password")
                 ));
             }
         } catch (Exception e) {
@@ -79,7 +124,7 @@ public class ControllerUsuario implements UsuarioRepository {
 
     @Override
     public void editar(Usuario usuario) {
-        String sql = "UPDATE usuarios SET nombre = ?, apellido = ?, contrasenia = ?, email = ? WHERE id_usuario = ?";
+        String sql = "UPDATE usuarios SET nombre = ?, apellido = ?, password = ?, email = ? WHERE id_usuario = ?";
         try (PreparedStatement statement = con.prepareStatement(sql)) {
             statement.setString(1, usuario.getNombre());
             statement.setString(2, usuario.getApellido());
@@ -107,31 +152,43 @@ public class ControllerUsuario implements UsuarioRepository {
     }
 
     @Override
-    public Usuario login(String nombre, String password) {
+    public Usuario login(String email, String password) {
         Usuario user = null;
-        // Consulta usando 'contrasenia' como está en tu foto de la DB
-        String sql = "SELECT * FROM usuarios WHERE nombre = ? AND contrasenia = ?";
+        String sql = "SELECT * FROM usuarios WHERE email = ? AND password = ? AND estado = 'ACTIVO'";
         
         try {
             PreparedStatement stmt = con.prepareStatement(sql);
-            stmt.setString(1, nombre);
+            stmt.setString(1, email);
             stmt.setString(2, password);
             
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                // Creamos un Alumno (o la clase que elijas) con los datos de la foto
-                // El orden debe ser: id, nombre, apellido, email, contrasenia
-                user = new Alumno(
-                    rs.getInt("id_usuario"),
-                    rs.getString("nombre"),
-                    rs.getString("apellido"),
-                    rs.getString("email"),       // Según tu foto, email es el último campo
-                    rs.getString("contrasenia")  // contrasenia es el anteúltimo
-                );
-                System.out.println("✅ Usuario encontrado: " + rs.getString("nombre"));
+                // 1. Leemos el ROL
+                String rol = rs.getString("rol"); 
+                
+                // 2. Extraemos datos
+                int id = rs.getInt("id_usuario");
+                String nom = rs.getString("nombre");
+                String ape = rs.getString("apellido");
+                String mail = rs.getString("email");
+                String pass = rs.getString("password");
+
+                // 3. Creamos el objeto según Rol
+                if (rol.equalsIgnoreCase("ADMIN")) {
+                    user = new Administrador(id, nom, ape, mail, pass);
+                } else if (rol.equalsIgnoreCase("PROFESOR")) {
+                    user = new Profesor(id, nom, ape, mail, pass);
+                } else if (rol.equalsIgnoreCase("GUIONISTA") || rol.equalsIgnoreCase("CONTENIDISTA")) {
+                    user = new Contenidista(id, nom, ape, mail, pass);
+                } else {
+                    user = new Alumno(id, nom, ape, mail, pass);
+                }
+                
+                // El print debe ir ADENTRO del if para poder usar la variable 'rol'
+                System.out.println("✅ " + rol + " detectado. Entrando al sistema...");
             } else {
-                System.out.println("❌ No se encontró el usuario en la base de datos.");
+                System.out.println("❌ No se encontró el usuario o no está ACTIVO.");
             }
             
         } catch (SQLException e) {
@@ -140,5 +197,5 @@ public class ControllerUsuario implements UsuarioRepository {
         }
         
         return user;
-    }
-}
+    } 
+} 
