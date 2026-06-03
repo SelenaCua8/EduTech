@@ -6,6 +6,7 @@ import DLL.ControllerCoordinador;
 import DLL.ControllerCoordinador;
 import repository.Validaciones;
 
+//Victor Miguel Ascencio Calle
 public class Administrador extends Usuario implements Validaciones {
 
 	private ControllerCoordinador controllerCoord = new ControllerCoordinador();
