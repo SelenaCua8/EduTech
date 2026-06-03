@@ -16,7 +16,7 @@ public class Main {
     public static void main(String[] args) {
         
         // 1. Configuración del Logo
-        ImageIcon iconoOriginal = new ImageIcon(Main.class.getResource("/imagenes/eduTech-logo.png"));
+        ImageIcon iconoOriginal = new ImageIcon("/imagenes/eduTech-logo.png");
         Image imagenEscalada = iconoOriginal.getImage().getScaledInstance(140, 140, Image.SCALE_SMOOTH);
         ImageIcon logo = new ImageIcon(imagenEscalada);
 
