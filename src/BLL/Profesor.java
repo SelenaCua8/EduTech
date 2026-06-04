@@ -1,146 +1,116 @@
 package BLL;
 
 import javax.swing.JOptionPane;
-
+import java.util.ArrayList; // Necesario para recibir los datos de las consultas de la BD
+import DLL.ControllerProfesor; // Asegurate de importar tu nuevo controlador
 import repository.Validaciones;
 
-public class Profesor extends Usuario implements Validaciones{
-
+public class Profesor extends Usuario implements Validaciones {
     
+    // Instanciamos el controlador específico para el Profesor
+    private ControllerProfesor controllerProf = new ControllerProfesor();
 
-	public Profesor(int id, String nombre, String email, String tipo, String password) {
-		super(id, nombre, email, tipo, password);
-	}
+    // Constructor de la clase
+    public Profesor(int id, String nombre, String email, String tipo, String password) {
+        super(id, nombre, email, tipo, password);
+    }
 
-	@Override
-	public String toString() {
-		return "Profesor [toString()=" + super.toString() + "]";
-	}
+    @Override
+    public String toString() {
+        return "Profesor [toString()=" + super.toString() + "]";
+    }
 
-	@Override
-	public void menu() {
-		String[] opciones = {"Agregar alumno","Ver alumnos","Eliminar alumno", "editar alumno","salir"};
-		int opcion;
-		
-		do {
-			
-			opcion = JOptionPane.showOptionDialog(null, "Elija opcion", "", 0, 0, null, opciones, opciones);
-			switch (opcion) {
-			case 0:
-				this.AgregarAlumno();
-				break;
-			case 1:
-			this.MostrarAlumno();
-				
-				break;
-			case 2: 
-                this.EliminarAlumno();
-                break;
-			case 3: 
-                this.EditarAlumno();
-                break;
-				
-			default:
-				break;
-			}
-		} while (opcion!=4);
-		
-	}
-	public void AgregarAlumno() {
-		
-		Alumno nuevo = new Alumno(
-				this.validarString("Ingrse nombre"),
-				
-				this.validarString("Ingrse email"),
-				
-				"Alumno", 
-				this.validarString("Ingrse passwoard"));
-		
-		this.getController().agregarUsuario(nuevo);
-	}
+    @Override
+    public void menu() {
+        // Un menú directo, limpio y exclusivo para las tareas del Profesor
+        String[] opciones = {
+            "1. Ver mis Materias", 
+            "2. Ver Alumnos y Progreso", 
+            "3. Ver Correcciones Pendientes",
+            "4. Salir"
+        };
+        int opcion;
+        
+        do {
+            opcion = JOptionPane.showOptionDialog(
+                null, 
+                "Panel del Profesor: " + this.getNombre() + "\n¿Qué desea gestionar hoy?", 
+                "EduTech System", 
+                0, 
+                JOptionPane.PLAIN_MESSAGE, 
+                null, 
+                opciones, 
+                opciones[0]
+            );
+            
+            switch (opcion) {
+                case 0:
+                    this.verMisMaterias();
+                    break;
+                case 1:
+                    this.verAlumnosYProgreso();
+                    break;
+                case 2: 
+                    this.verCorreccionesPendientes();
+                    break;
+                default:
+                    break;
+            }
+        } while (opcion != 3); 
+    }
 
-	
-	public void EliminarAlumno() {
-	    try {
-	        // Pedimos el ID al profesor
-	        String input = JOptionPane.showInputDialog("Ingrese el ID del alumno que desea eliminar:");
-	        
-	        if (input != null && !input.isEmpty()) {
-	            int idParaEliminar = Integer.parseInt(input);
-	            
-	            // Creamos un alumno vacío solo con el ID para que el Controller sepa a quién borrar
-	            // Nota: Alumno(id, nombre, email, tipo, password)
-	            Alumno alumnoBorrar = new Alumno(idParaEliminar, "", "", "Alumno", "");
-	            
-	            // Llamamos al método del controlador que creamos antes
-	            this.getController().eliminar(alumnoBorrar);
-	            
-	            JOptionPane.showMessageDialog(null, "Proceso de eliminación finalizado.");
-	        }
-	    } catch (NumberFormatException e) {
-	        JOptionPane.showMessageDialog(null, "Error: Debe ingresar un número de ID válido.");
-	    }
-	}
+    // =======================================================
+    //   FUNCIONES EXCLUSIVAS DE GESTIÓN ACADÉMICA 
+    // =======================================================
 
-	public void EditarAlumno() {
-	    try {
-	        // 1. Pedimos el ID para saber A QUIÉN editar
-	        String input = JOptionPane.showInputDialog("Ingrese el ID del alumno que desea EDITAR:");
-	        
-	        if (input != null && !input.isEmpty()) {
-	            int idParaEditar = Integer.parseInt(input);
-	            
-	            // 2. Pedimos los NUEVOS datos (usando tus métodos de validación)
-	            String nuevoNombre = this.validarString("Ingrese el NUEVO nombre:");
-	            String nuevoEmail = this.validarString("Ingrese el NUEVO email:");
-	            String nuevoPass = this.validarString("Ingrese la NUEVA contraseña:");
-	            
-	            // 3. Creamos el objeto con el ID original y los datos actualizados
-	            // Nota: El tipo sigue siendo "Alumno"
-	            Alumno alumnoEditado = new Alumno(idParaEditar, nuevoNombre, nuevoEmail, "Alumno", nuevoPass);
-	            
-	            // 4. Se lo mandamos al controlador
-	            this.getController().editar(alumnoEditado);
-	            
-	            JOptionPane.showMessageDialog(null, "¡Alumno actualizado con éxito!");
-	        }
-	    } catch (NumberFormatException e) {
-	        JOptionPane.showMessageDialog(null, "Error: El ID debe ser un número válido.");
-	    } catch (Exception e) {
-	        JOptionPane.showMessageDialog(null, "Ocurrió un error al intentar editar.");
-	        e.printStackTrace();
-	    }}
-	    public void MostrarAlumno() {
-		    try {
-		        // 1. Pedimos el ID para saber A QUIÉN editar
-		        String input = JOptionPane.showInputDialog("Ingrese el ID del alumno que desea Mostrar:");
-		        
-		        if (input != null && !input.isEmpty()) {
-		            int idParaEditar = Integer.parseInt(input);
-		            
-		            // 2. Pedimos los NUEVOS datos (usando tus métodos de validación)
-		            String nuevoNombre = this.validarString("Ingrese el NUEVO nombre:");
-		            String nuevoEmail = this.validarString("Ingrese el NUEVO email:");
-		            String nuevoPass = this.validarString("Ingrese la NUEVA contraseña:");
-		            
-		            // 3. Creamos el objeto con el ID original y los datos actualizados
-		            // Nota: El tipo sigue siendo "Alumno"
-		            Alumno alumnoEditado = new Alumno(idParaEditar, nuevoNombre, nuevoEmail, "Alumno", nuevoPass);
-		            
-		            // 4. Se lo mandamos al controlador
-		            this.getController().editar(alumnoEditado);
-		            
-		            JOptionPane.showMessageDialog(null, "¡Alumno actualizado con éxito!");
-		        }
-		    } catch (NumberFormatException e) {
-		        JOptionPane.showMessageDialog(null, "Error: El ID debe ser un número válido.");
-		    } catch (Exception e) {
-		        JOptionPane.showMessageDialog(null, "Ocurrió un error al intentar editar.");
-		        e.printStackTrace();
-		    }
-	  
-}}
-    
+    // FUNCIÓN 1: Ver materias que tiene que dar
+    public void verMisMaterias() {
+        // CORREGIDO: Usamos controllerProf para llamar al método específico
+        ArrayList<String> materias = this.controllerProf.obtenerMateriasPorProfesor(this.getId());
+        
+        if (materias == null || materias.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No tienes materias asignadas en este ciclo.", "Mis Materias", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        String mensaje = "--- TUS MATERIAS ASIGNADAS ---\n";
+        for (String materia : materias) {
+            mensaje += "• " + materia + "\n";
+        }
+        JOptionPane.showMessageDialog(null, mensaje, "Mis Materias", JOptionPane.INFORMATION_MESSAGE);
+    }
 
- 
+    // FUNCIÓN 2: Ver alumnos de sus materias y su progreso
+    public void verAlumnosYProgreso() {
+        // CORREGIDO: Usamos controllerProf y limpiamos la condición del 'if'
+        ArrayList<String> alumnosProgreso = this.controllerProf.obtenerProgresoAlumnos(this.getId());
+        
+        if (alumnosProgreso == null || alumnosProgreso.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No hay alumnos registrados en tus comisiones actualmente.", "Progreso de Alumnos", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        String mensaje = "--- PROGRESO DE ALUMNOS POR MATERIA ---\n";
+        for (String linea : alumnosProgreso) {
+            mensaje += linea + "\n";
+        }
+        JOptionPane.showMessageDialog(null, mensaje, "Progreso de Alumnos", JOptionPane.INFORMATION_MESSAGE);
+    }
 
+    // FUNCIÓN 3: Ver correcciones pendientes (Entregas sin nota)
+    public void verCorreccionesPendientes() {
+        // CORREGIDO: Usamos controllerProf para vincularlo a las consultas SQL del docente
+        ArrayList<String> pendientes = this.controllerProf.obtenerCorreccionesPendientes(this.getId());
+        
+        if (pendientes == null || pendientes.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "¡Al día! No tienes trabajos prácticos o exámenes pendientes de corregir.", "Correcciones", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        String mensaje = "--- ENTREGAS PENDIENTES DE CALIFICAR ---\n";
+        for (String entrega : pendientes) {
+            mensaje += "► " + entrega + "\n";
+        }
+        JOptionPane.showMessageDialog(null, mensaje, "Correcciones Pendientes", JOptionPane.WARNING_MESSAGE);
+    }
+}

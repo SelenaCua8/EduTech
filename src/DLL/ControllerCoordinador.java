@@ -5,7 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import java.sql.PreparedStatement;
-
+//Victot Miguel Ascencio Calle
 public class ControllerCoordinador {
 	
 	private Connection con = Conexion.getInstance().getConnection();
