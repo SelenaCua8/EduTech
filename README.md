@@ -7,7 +7,7 @@
 ## 👥 Integrantes del Equipo
 * **Lucca Foglia**
 * **Selena Cuadra**
-* **Gabriel Diaz**
+* **Ricardo Gabriel Diaz**
 * **Victor Ascencio**
 
 ---
