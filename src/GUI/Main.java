@@ -2,18 +2,21 @@ package GUI;
 
 import javax.swing.JOptionPane;
 import BLL.Usuario;
+import BLL.Contenidista;
+import BLL.Profesor;
+import BLL.Alumno;
 import DLL.ControllerUsuario;
 import repository.Hashing;
 
 public class Main {
     public static void main(String[] args) {
-        
-
-
 
         String[] acciones = { "Login", "Registrar", "Salir" };
         int menu = 0;
         
+        // Instanciamos el controlador para poder usar el login real
+        ControllerUsuario controlUsuario = new ControllerUsuario(); 
+
         do {
             // 1. Menú Principal Limpio
             menu = JOptionPane.showOptionDialog(
@@ -22,21 +25,42 @@ public class Main {
                 "EduTech System", 
                 JOptionPane.DEFAULT_OPTION, 
                 JOptionPane.PLAIN_MESSAGE, 
-                null, // Al pasar null, Swing usa la interfaz estándar sin buscar imágenes
+                null, // Swing usa la interfaz estándar sin buscar imágenes
                 acciones, 
                 acciones[0]
             );
 
             switch (menu) {
                 case 0: // LOGIN
-                    Usuario usuarioLogueado = Usuario.Login();
+                    // FIX 1: Pedir las credenciales por pantalla usando JOptionPane
+                    String emailLogin = JOptionPane.showInputDialog("Ingrese su Email:");
+                    String passLogin = JOptionPane.showInputDialog("Ingrese su Contraseña:");
+                    
+                    if (emailLogin == null || passLogin == null) break;
+
+                    // Validamos contra la base de datos usando el controlador
+                    Usuario usuarioLogueado = controlUsuario.login(emailLogin, passLogin);
                     
                     if (usuarioLogueado != null) {
-                        // Bienvenida general estándar
                         JOptionPane.showMessageDialog(null, "Bienvenido " + usuarioLogueado.getNombre(), "EduTech", JOptionPane.INFORMATION_MESSAGE);
                         
-                        // SALTO AL MENÚ ESPECÍFICO (Direcciona según el rol)
-                        usuarioLogueado.menu(); 
+                        // FIX 2 (Clase Fantasma): Filtramos por rol usando instanceof (Herencia)
+                        // Esto conecta tu menú y pone un "parche" seguro en los que faltan.
+                        if (usuarioLogueado instanceof Contenidista) {
+                            // Carga TU menú ya estructurado y terminado
+                            MenuGuionista.mostrarMenu(usuarioLogueado.getId());
+                            
+                        } else if (usuarioLogueado instanceof Profesor) {
+                            // Parche temporal para que a Selena no le salte error
+                            JOptionPane.showMessageDialog(null, "Menú de Profesor en construcción para la 3ra entrega...", "Aviso MVP", JOptionPane.WARNING_MESSAGE);
+                            
+                        } else if (usuarioLogueado instanceof Alumno) {
+                            // Parche temporal para contener el código faltante de Lucca
+                            JOptionPane.showMessageDialog(null, "Menú de Alumno en construcción para la 3ra entrega...", "Aviso MVP", JOptionPane.WARNING_MESSAGE);
+                            
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Panel de Administrador en construcción...", "Aviso MVP", JOptionPane.WARNING_MESSAGE);
+                        }
                         
                     } else {
                         JOptionPane.showMessageDialog(null, "Acceso denegado: Datos incorrectos o cuenta PENDIENTE.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -60,8 +84,7 @@ public class Main {
                         String rolElegido = roles[seleccion];
                         String passCifrada = Hashing.hash(pass);
 
-                        ControllerUsuario con = new ControllerUsuario();
-                        boolean exito = con.insertarUsuarioNuevo(nom, ape, mail, passCifrada, rolElegido);
+                        boolean exito = controlUsuario.insertarUsuarioNuevo(nom, ape, mail, passCifrada, rolElegido);
 
                         if (exito) {
                             JOptionPane.showMessageDialog(null, "¡Registro enviado! Tu cuenta está PENDIENTE de aprobación.");
@@ -75,6 +98,6 @@ public class Main {
                     JOptionPane.showMessageDialog(null, "Gracias por usar EduTech System", "Adiós", JOptionPane.INFORMATION_MESSAGE);
                     break;
             }
-        } while (menu != 2);
+        } while (menu != 2 && menu != JOptionPane.CLOSED_OPTION);
     }
 }
